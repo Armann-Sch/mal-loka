@@ -119,7 +119,8 @@ commands = {
 
 # Dictionary for holding descriptions for commands
 commands_desc = {
-    'help': 'h, help: List'
+    'help': 'h, help: List all commands and their descriptions\nh <cmd>, help <cmd>: Give the description of a specified command.',
+    'load': 'load, l: '
 }
 
 
