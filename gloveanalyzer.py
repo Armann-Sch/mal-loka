@@ -72,13 +72,6 @@ def get_within_range(model, main_word, r):
 
     return in_range
 
-
-def get_distance(vecA, vecB):
-    s = 0
-    for i in range(len(vecA)):
-        s += np.square(vecA[i]-vecB[i])
-    return np.sqrt(s)
-
 def print_resutls():
     return None
 
