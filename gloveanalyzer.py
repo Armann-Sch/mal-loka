@@ -2,6 +2,8 @@
 import numpy as np
 from scipy import spatial
 
+programname = "GloveAnalyzer"
+
 # Global variables declared
 modelA = {}
 modelB = {}
@@ -97,6 +99,7 @@ conversion_rules = []
 #print(modelA['Holmes']-modelB['Holmes'])
 #print(get_distance(modelA['Holmes'], modelB['Holmes']))
 
+# Dictionary for parsing commands
 commands = {
     'help': ['h', 'help', 'commands'],
     'quit': ['q', 'quit', 'exit'],
@@ -109,21 +112,29 @@ commands = {
     'sizeB': ['sizeB'],
 }
 
+# Dictionary for holding descriptions for commands
 commands_desc = {
-    'help': 'List'
+    'help': 'h, help: List'
 }
 
-programname = "GloveAnalyzer"
+
 print(f"Welcome to ${programname}!\nInsert h for a list of commands")
+
+# Loop that keeps the program running until the user tells it to quit
 run = True
 while run:
+    # Input is read and parsed to see which action should be performed
     args = input("What would you like to do? ").split(" ")
+    
     if len(args) != 0:
         args[0] = args[0].lower()
-        if args[0].lower() in commands['quit']:
+        
+        if args[0] in commands['quit']:
             run = False
-        elif args[0].lower() in commands['compare']:
+        
+        elif args[0] in commands['compare']:
             print("comparing")
+        
         elif args[0] in commands['load']:
             dists = {}
             if args[1].lower() == "a":
