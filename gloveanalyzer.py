@@ -85,22 +85,6 @@ def compare_word(word, wr):
     # wr determines whether results will be written over a file, appended to a file or printed int the terminal
     return word
 
-#args = input().split(" ")
-#inA = args[0]
-#inB = args[1]
-
-#modelA = load_glove_model(inA)
-#modelB = load_glove_model(inB)
-conversion_rules = []
-
-#if len(args) > 2:
-#    inC = args[2]
-
-
-
-#print(modelA['Holmes']-modelB['Holmes'])
-#print(get_distance(modelA['Holmes'], modelB['Holmes']))
-
 # Dictionary for parsing commands
 commands = {
     'help': ['h', 'help', 'commands'],
