@@ -75,6 +75,11 @@ def get_distance(vecA, vecB):
         s += np.square(vecA[i]-vecB[i])
     return np.sqrt(s)
 
+def print_resutls():
+    return None
+
+def save_results(ow):
+    return None
 
 def compare_word(word, wr):
     #sortedA(modelA.keys())
