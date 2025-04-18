@@ -34,18 +34,18 @@ def load_glove_model(File):
         
         print(f"{len(glove_model)} words loaded!")
         return glove_model
-
-# Accepts a model object, a distance dict and a word
-# Updates the distance dictionary to to include an entry
-# for the word that contains a sorted list of tuples
-# containing the other words and their euclidian distance
-# from the original word.
-def make_sorted(model, sort, word):
-    sort[word] = []
+###############################################################################
+# Accepts a model object, a distance dict and a word                          #
+# Updates the distance dictionary to to include an entry for the word that    # 
+# contains a sorted list of tuples containing the other words and their       #
+# euclidian distance from the original word.                                  #
+###############################################################################
+def make_sorted(model, word):
+    sort = []
     for k in model.keys():
         if k != word:
-            sort[word].append((k, spatial.distance.euclidean(model[word], model[k])))
-    sort[word] = sorted(sort[word], key=lambda x: x[1])
+            sort.append((k, spatial.distance.euclidean(model[word], model[k])))
+    sort = sorted(sort[word], key=lambda x: x[1])
     return sort
 
 def prepare_models(A, B):
@@ -57,7 +57,7 @@ prepare_models("gloves/sherlock/vectors.txt", "gloves/14/model.txt")
 # Returns the n closest words in terms of euclid
 # distance from the main word along with the distance
 def get_n_closest(model, main_word, n):
-    closest_words = []
+    make_sorted(model)
     # Search for n closest vectors
 
     return closest_words
