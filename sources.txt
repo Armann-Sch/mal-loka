@@ -1,1 +1,12 @@
 Sherlock Holmes texts: https://sherlock-holm.es/stories/plain-text/cnus.txt
+https://medium.com/analytics-vidhya/basics-of-using-pre-trained-glove-vectors-in-python-d38905f356db
+https://vectors.nlpl.eu/repository/#
+
+https://nlp.stanford.edu/projects/glove/
+
+potential sources:
+http://www.natcorp.ox.ac.uk/
+https://huggingface.co/datasets/TheBritishLibrary/blbooks
+https://clarin.is/gogn/
+https://www.elra.info/catalogues/free-resources/free-lrs-set/
+https://opendatacommons.org/licenses/pddl/
