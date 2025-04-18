@@ -23,9 +23,13 @@ def load_glove_model(File):
             # Some tokens came out as two words sepearated by a space so
             # the systems checks to ensure it does not try to convert a
             # string to a float
-            if (len(split_line) == 302):
-                word = split_line[0] + " " + split_line[1]
-                embedding = np.array(split_line[2:], dtype=np.float64)
+            if (len(split_line) > 301):
+                offset = len(split_line)-300
+                word = " ".join(split_line[:offset])
+                embedding = np.array(split_line[offset:], dtype=np.float64)            
+            #if (len(split_line) == 302):
+            #    word = split_line[0] + " " + split_line[1]
+            #    embedding = np.array(split_line[2:], dtype=np.float64)
             else:
                 word = split_line[0]
                 embedding = np.array(split_line[1:], dtype=np.float64)
@@ -34,6 +38,7 @@ def load_glove_model(File):
         
         print(f"{len(glove_model)} words loaded!")
         return glove_model
+
 ###############################################################################
 # Accepts a model object, a distance dict and a word                          #
 # Updates the distance dictionary to to include an entry for the word that    # 
@@ -41,26 +46,22 @@ def load_glove_model(File):
 # euclidian distance from the original word.                                  #
 ###############################################################################
 def make_sorted(model, word):
+#    sort = {word: []}
     sort = []
     for k in model.keys():
         if k != word:
+            if len(model[k]) == 302:
+                print(k)
             sort.append((k, spatial.distance.euclidean(model[word], model[k])))
-    sort = sorted(sort[word], key=lambda x: x[1])
+    sort = sorted(sort, key=lambda x: x[1])
     return sort
 
-def prepare_models(A, B):
-    modelA = load_glove_model(A)
-    modelB = load_glove_model(B)
-
-prepare_models("gloves/sherlock/vectors.txt", "gloves/14/model.txt")
 # Takes a model, main word string and integer n
 # Returns the n closest words in terms of euclid
 # distance from the main word along with the distance
 def get_n_closest(model, main_word, n):
-    make_sorted(model)
-    # Search for n closest vectors
-
-    return closest_words
+    return make_sorted(model, main_word)
+    closest_words[:n]
 
 # Takes a model, main word, float r as arguments
 # Returns all the words with a euclid distance
@@ -78,12 +79,36 @@ def print_resutls():
 def save_results(ow):
     return None
 
-def compare_word(word, wr):
-    #sortedA(modelA.keys())
+def compare_word_n(word, n, wr):
+    in_range_A = sorted(make_sorted(modelA, word)[:n])
+    in_range_B = sorted(make_sorted(modelB, word)[:n])
+
+    print(in_range_A)
+    print(in_range_B)
+    
+    comparisons = {
+        'average diff' : 0,
+        'just A': [],
+        'just B': [],
+        'both': []
+    }
 
 
     # wr determines whether results will be written over a file, appended to a file or printed int the terminal
     return word
+
+#def compare_word_range(word, r, wr)
+
+def prepare_models(A, B):
+    global modelA
+    global modelB
+    modelA = load_glove_model(A)
+    modelB = load_glove_model(B)
+    #print(len(modelB['100']))
+    #print(len(modelB['Sherlock']))
+    compare_word_n('Sherlock', 30, True)
+
+prepare_models("gloves/sherlock/vectors.txt", "gloves/14/model.txt")
 
 # Dictionary for parsing commands
 commands = {
