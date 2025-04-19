@@ -61,7 +61,6 @@ def make_sorted(model, word):
 # distance from the main word along with the distance
 def get_n_closest(model, main_word, n):
     return make_sorted(model, main_word)
-    closest_words[:n]
 
 # Takes a model, main word, float r as arguments
 # Returns all the words with a euclid distance
@@ -80,12 +79,12 @@ def save_results(ow):
     return None
 
 def compare_word_n(word, n, wr):
-    in_range_A = sorted(make_sorted(modelA, word)[:n])
-    in_range_B = sorted(make_sorted(modelB, word)[:n])
+    # List are sorted by distance in order to select the n closest
+    # they are then sorted alphabetically to make comparing lists
+    # simpler
+    irA = sorted(make_sorted(modelA, word)[:n])
+    irB = sorted(make_sorted(modelB, word)[:n])
 
-    print(in_range_A)
-    print(in_range_B)
-    
     comparisons = {
         'average diff' : 0,
         'just A': [],
@@ -93,6 +92,38 @@ def compare_word_n(word, n, wr):
         'both': []
     }
 
+    i = 0
+    j = 0
+    total = 0
+    count = 0
+    
+    while i < len(irA) and j < len(irB):
+        # If the two words being compared are the same, add the word to the comparisons list both
+        # in the form of a touple of the word and the difference in their eucledian distances
+        if irA[i][0] == irB[j][0]:
+            diff = irA[i][1]-irB[j][1]
+            comparisons['both'].append((irA[i][0], diff))
+            total += diff
+            count += 1
+            i += 1
+            j += 1
+        # If the word in model A is earlier alphabetically, add it to the comparisons list 'just A'
+        # and increment i by 1
+        elif irA[i][0] < irB[j][0]:
+            comparisons['just A'].append(irA[i])
+            i += 1
+        # Conversely if the word in model B is earlier, add it to the comparisons list 'just B' and
+        # increment j by 1
+        else:
+            comparisons['just B'].append(irB[j])
+            j += 1
+    
+    avr = total/count
+    comparisons['average diff'] = avr
+    print(comparisons['average diff'])
+    print(len(comparisons['just A']))
+    print(len(comparisons['just B']))
+    print(len(comparisons['both']))
 
     # wr determines whether results will be written over a file, appended to a file or printed int the terminal
     return word
@@ -104,9 +135,9 @@ def prepare_models(A, B):
     global modelB
     modelA = load_glove_model(A)
     modelB = load_glove_model(B)
-    #print(len(modelB['100']))
-    #print(len(modelB['Sherlock']))
+    
     compare_word_n('Sherlock', 30, True)
+    compare_word_n('man', 30, True)
 
 prepare_models("gloves/sherlock/vectors.txt", "gloves/14/model.txt")
 
@@ -149,6 +180,7 @@ while run:
         
         elif args[0] in commands['load']:
             dists = {}
+
             if args[1].lower() == "a":
                 modelA = load_glove_model(args[2])
             elif args[1].lower() == "b":
