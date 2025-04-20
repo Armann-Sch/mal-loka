@@ -11,6 +11,14 @@ modelB = {}
 distsA = {}
 distsB = {}
 
+comparisons = {
+        'word': '',
+        'average diff' : 0,
+        'just A': [],
+        'just B': [],
+        'both': []
+    }
+
 # Accepts a filename as an argument and reads the file contents
 # Glove vectors are assumed to have a dimension of 300
 def load_glove_model(File):
@@ -27,14 +35,12 @@ def load_glove_model(File):
                 offset = len(split_line)-300
                 word = " ".join(split_line[:offset])
                 embedding = np.array(split_line[offset:], dtype=np.float64)            
-            #if (len(split_line) == 302):
-            #    word = split_line[0] + " " + split_line[1]
-            #    embedding = np.array(split_line[2:], dtype=np.float64)
             else:
                 word = split_line[0]
                 embedding = np.array(split_line[1:], dtype=np.float64)
-        
-            glove_model[word] = embedding
+            
+            if '@' not in word and '.com' not in word and '.org' not in word and '.net' not in word:
+                glove_model[word] = embedding
         
         print(f"{len(glove_model)} words loaded!")
         return glove_model
@@ -103,21 +109,28 @@ def print_results(cmp):
 def save_results(ow):
     return None
 
-def compare_word_n(word, n, wr):
-    # List are sorted by distance in order to select the n closest
-    # they are then sorted alphabetically to make comparing lists
-    # simpler
-    irA = sorted(make_sorted(modelA, word)[:n])
-    irB = sorted(make_sorted(modelB, word)[:n])
-
-    comparisons = {
+def compare_word_n(word, n):
+    compare = {
         'word': word,
         'average diff' : 0,
         'just A': [],
         'just B': [],
         'both': []
     }
+    n = abs(n)
 
+    if word not in modelA or word not in modelB:
+        print("Word not found in or both models.")
+        compare['word'] = ""
+        return compare
+    
+    # List are sorted by distance in order to select the n closest
+    # they are then sorted alphabetically to make comparing lists
+    # simpler
+    irA = sorted(make_sorted(modelA, word)[:n])
+    irB = sorted(make_sorted(modelB, word)[:n])
+
+    avr = 0
     i = 0
     j = 0
     total = 0
@@ -128,7 +141,7 @@ def compare_word_n(word, n, wr):
         # in the form of a touple of the word and the difference in their eucledian distances
         if irA[i][0] == irB[j][0]:
             diff = irA[i][1]-irB[j][1]
-            comparisons['both'].append((irA[i][0], diff))
+            compare['both'].append((irA[i][0], diff))
             total += diff
             count += 1
             i += 1
@@ -136,35 +149,30 @@ def compare_word_n(word, n, wr):
         # If the word in model A is earlier alphabetically, add it to the comparisons list 'just A'
         # and increment i by 1
         elif irA[i][0] < irB[j][0]:
-            comparisons['just A'].append(irA[i])
+            compare['just A'].append(irA[i])
             i += 1
         # Conversely if the word in model B is earlier, add it to the comparisons list 'just B' and
         # increment j by 1
         else:
-            comparisons['just B'].append(irB[j])
+            compare['just B'].append(irB[j])
             j += 1
     
-    avr = total/count
-    comparisons['average diff'] = avr
-    print(comparisons['average diff'])
-    print(len(comparisons['just A']))
-    print(len(comparisons['just B']))
-    print(len(comparisons['both']))
-
-    # wr determines whether results will be written over a file, appended to a file or printed int the terminal
-    return comparisons
+    if count != 0:
+        avr = total/count
+    compare['average diff'] = avr
+    
+    return compare
 
 #def compare_word_range(word, r, wr)
 
 def prepare_models(A, B):
     global modelA
     global modelB
+    global comparisons
     modelA = load_glove_model(A)
     modelB = load_glove_model(B)
     
-    c = compare_word_n('Sherlock', 30, True)
-    #compare_word_n('man', 30, True)
-    print_results(c)
+    comparisons = compare_word_n('Sherlock', 30)
 
 prepare_models("gloves/sherlock/vectors.txt", "gloves/14/model.txt")
 
@@ -179,12 +187,22 @@ commands = {
     'sizes': ['sizes'],
     'sizeA': ['sizeA'],
     'sizeB': ['sizeB'],
+    'print': ['print', 'p'],
+    'save': ['save', 's']
 }
 
 # Dictionary for holding descriptions for commands
 commands_desc = {
-    'help': 'h, help: List all commands and their descriptions\nh <cmd>, help <cmd>: Give the description of a specified command.',
-    'load': 'load, l: '
+    'help': 'h, help <command>: List all commands and their descriptions\nh <cmd>, help <cmd>: Give the description of a specified command.',
+    'quit': 'q, quit, exit: Exit the program.',
+    'load': 'load, l <modelname1> <modelname2>: Load two models',
+    'loada': 'loada, la <filename>: Load a model into the modelA object.',
+    'loadb': 'loadb, lb <filename>: Load a model into the modelB object.',
+    'sizes': 'sizes: Displays the number of entries in both models',
+    'sizea': 'sizeA: Displays the number of entries in modelA.',
+    'sizeb': 'sizeB: Displays the number of entries in modelB.',
+    'print': 'print, p: Prints information about the last comparison in the terminal, enters a menu letting you see particular subsets of words using different commands.',
+    'save': 'save, s <filename> <w|a>: Save the last comparison to a file, an optional parameter w or a to instruct it to overwrite or append to the file. It will append by default.'    
 }
 
 
@@ -198,20 +216,59 @@ while run:
     
     if len(args) != 0:
         args[0] = args[0].lower()
-        
+                
         if args[0] in commands['quit']:
             run = False
         
+        elif args[0] in commands['help']:
+            if len(args) >1:
+                if args[1].lower() in commands:
+                    print(commands_desc[args[1].lower()])
+            else:
+                for c in commands_desc:
+                    print(commands_desc[c])
+
         elif args[0] in commands['compare']:
-            print("comparing")
+            n = 100
+            if len(args) == 1:
+                print("You must give a word to prefer, and optionally a number of nearest words.")
+            else:
+                w = args[1]
+            if len(args) > 2:
+                if args[2].isdigit():
+                    n = int(args[2])
+                else:
+                    print("n must be a valid integer")
+            comparisons = compare_word_n(w, n)
+            print_results(comparisons)
         
         elif args[0] in commands['load']:
-            dists = {}
-
-            if args[1].lower() == "a":
-                modelA = load_glove_model(args[2])
-            elif args[1].lower() == "b":
-                modelB = load_glove_model(args[2])
-            else:
+            if len(args) >= 3:
                 modelA = load_glove_model(args[1])
                 modelB = load_glove_model(args[2])
+            else:
+                print("You must enter two filenames")
+        
+        elif args[0] in commands['loadA']:
+            if len(args) > 1:
+                modelA = load_glove_model(args[1])
+            else:
+                print("You must enter file name.")
+        
+        elif args[0] in commands['loadB']:
+            if len(args) > 1:
+                modelB = load_glove_model(args[1])
+            else:
+                print("You must enter file name.")
+        
+        elif args[0] in commands['sizes']:
+            print(f"ModelA: {len(modelA)} entries.\nModelB: {len(modelB)} entries.")
+
+        elif args[0] in commands['sizeA']:
+            print(f"ModelA: {len(modelA)} entries.")
+
+        elif args[0] in commands['sizeB']:
+            print(f"ModelB: {len(modelB)} entries.")
+
+        elif args[0] in commands['print']:
+            print_results(comparisons)
