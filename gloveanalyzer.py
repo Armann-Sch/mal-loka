@@ -72,8 +72,33 @@ def get_within_range(model, main_word, r):
 
     return in_range
 
-def print_resutls():
-    return None
+def print_results(cmp):
+    cmp_s1 = f"Comparison for \"{cmp['word']}\"\n"
+    cmp_s2 = f"Nearby vectors only in A: {len(cmp['just A'])}\n"
+    cmp_s3 = f"Nearby vectors only in B: {len(cmp['just B'])}\n"
+    cmp_s4 = f"Nearby vectors in both: {len(cmp['both'])}\n"
+    cmp_s5 = f"Average difference in vector distance: {cmp['average diff']}"
+    cmp_string = cmp_s1+cmp_s2+cmp_s3+cmp_s4+cmp_s5
+    print(cmp_string)
+    while True:
+        choice = input(f"To see the words in A , B or both, enter a, b or c. i for general info, To return to main menu enter blank. ").lower()
+        c = ""
+        if choice == 'a':
+            c = 'just A'
+        elif choice == 'b':
+            c = 'just B'
+        elif choice == 'c':
+            c = 'both'
+        elif choice == 'i':
+            print(cmp_string)
+        else:
+            c = ''
+        if c != '' and c != 'i':
+            for w in cmp[c]:
+                print(w)
+        else:
+            return
+
 
 def save_results(ow):
     return None
@@ -86,6 +111,7 @@ def compare_word_n(word, n, wr):
     irB = sorted(make_sorted(modelB, word)[:n])
 
     comparisons = {
+        'word': word,
         'average diff' : 0,
         'just A': [],
         'just B': [],
@@ -126,7 +152,7 @@ def compare_word_n(word, n, wr):
     print(len(comparisons['both']))
 
     # wr determines whether results will be written over a file, appended to a file or printed int the terminal
-    return word
+    return comparisons
 
 #def compare_word_range(word, r, wr)
 
@@ -136,8 +162,9 @@ def prepare_models(A, B):
     modelA = load_glove_model(A)
     modelB = load_glove_model(B)
     
-    compare_word_n('Sherlock', 30, True)
-    compare_word_n('man', 30, True)
+    c = compare_word_n('Sherlock', 30, True)
+    #compare_word_n('man', 30, True)
+    print_results(c)
 
 prepare_models("gloves/sherlock/vectors.txt", "gloves/14/model.txt")
 
