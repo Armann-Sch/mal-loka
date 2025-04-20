@@ -67,7 +67,7 @@ def print_results(cmp):
     cmp_string = cmp_s1+cmp_s2+cmp_s3+cmp_s4+cmp_s5
     print(cmp_string)
     while True:
-        choice = input(f"To see the words in A , B or both, enter a, b or c. i for general info, To return to main menu enter blank. ").lower()
+        choice = input(f"To see the words in A , B or both, enter a, b or c. i for general info, s to save to file. To return to main menu enter blank. ").lower()
         c = ""
         if choice == 'a':
             c = 'just A'
@@ -77,16 +77,37 @@ def print_results(cmp):
             c = 'both'
         elif choice == 'i':
             print(cmp_string)
+        elif choice == 's':
+            c = 's'
+            f = input("Save to what file? (defaults to comparisons.txt) ")
+            if f == "":
+                f = "comparisons.txt"
+            wa = input("over(w)rite or (a)ppend? ")
+            save_results(comparisons, f, wa)
         else:
             c = ''
-        if c != '' and c != 'i':
+        if c != '' and c != 'i' and c != 's':
             for w in cmp[c]:
                 print(w)
         else:
             return
 
-def save_results(ow):
-    return None
+def save_results(cmp, filename, wa):
+    justA = []
+    for a in cmp['just A']:
+        justA.append(f"[{a[0]}, {a[1]}]")
+    justB = []
+    for b in cmp['just B']:
+        justB.append(f"[{b[0]}, {b[1]}]")
+    both = []
+    for bo in cmp['both']:
+        both.append(f"[{bo[0]}, {bo[1]}]")
+    with open(filename, wa) as f:
+        f.write(f"Word: {cmp['word']}\n")
+        f.write(f"Average difference: {cmp['average diff']}\n")
+        f.write("JustA: " + ", ".join(justA)+"\n")
+        f.write("JustB: " + ", ".join(justB)+"\n")
+        f.write("Both: " + ", ".join(both)+"\n")
 
 def compare_word_n(word, n):
     compare = {
@@ -98,48 +119,58 @@ def compare_word_n(word, n):
     }
     n = abs(n)
 
-    if word not in modelA or word not in modelB:
-        print("Word not found in or both models.")
-        compare['word'] = ""
-        return compare
+    A = True
+    B = True
+    if word not in modelA:
+        A = False
+        print(f"{word} was not found in modelA.")
+    if word not in modelB:
+        B = False
+        print(f"{word} was not found in model B.")
     
     # List are sorted by distance in order to select the n closest
     # they are then sorted alphabetically to make comparing lists
     # simpler
-    irA = sorted(make_sorted(modelA, word)[:n])
-    irB = sorted(make_sorted(modelB, word)[:n])
+    if A:
+        irA = sorted(make_sorted(modelA, word)[:n])
+    if B:
+        irB = sorted(make_sorted(modelB, word)[:n])
 
     avr = 0
     i = 0
     j = 0
     total = 0
     count = 0
-    
-    while i < len(irA) and j < len(irB):
-        # If the two words being compared are the same, add the word to the comparisons list both
-        # in the form of a touple of the word and the difference in their eucledian distances
-        if irA[i][0] == irB[j][0]:
-            diff = irA[i][1]-irB[j][1]
-            compare['both'].append((irA[i][0], diff))
-            total += diff
-            count += 1
-            i += 1
-            j += 1
-        # If the word in model A is earlier alphabetically, add it to the comparisons list 'just A'
-        # and increment i by 1
-        elif irA[i][0] < irB[j][0]:
-            compare['just A'].append(irA[i])
-            i += 1
-        # Conversely if the word in model B is earlier, add it to the comparisons list 'just B' and
-        # increment j by 1
-        else:
-            compare['just B'].append(irB[j])
-            j += 1
-    
-    if count != 0:
-        avr = total/count
-    compare['average diff'] = avr
-    
+
+    if A and B:
+        while i < len(irA) and j < len(irB):
+            # If the two words being compared are the same, add the word to the comparisons list both
+            # in the form of a touple of the word and the difference in their eucledian distances
+            if irA[i][0] == irB[j][0]:
+                diff = irA[i][1]-irB[j][1]
+                compare['both'].append((irA[i][0], diff))
+                total += diff
+                count += 1
+                i += 1
+                j += 1
+            # If the word in model A is earlier alphabetically, add it to the comparisons list 'just A'
+            # and increment i by 1
+            elif irA[i][0] < irB[j][0]:
+                compare['just A'].append(irA[i])
+                i += 1
+            # Conversely if the word in model B is earlier, add it to the comparisons list 'just B' and
+            # increment j by 1
+            else:
+                compare['just B'].append(irB[j])
+                j += 1
+        
+        if count != 0:
+            avr = total/count
+        compare['average diff'] = avr
+    if i < len(irA):
+        compare['just A'].append(irA[i:])
+    if j < len(irB):
+        compare['just B'].append(irB[j:])
     return compare
 
 def prepare_models(A, B):
@@ -162,8 +193,8 @@ commands = {
     'loadA': ['loada', 'la'],
     'loadB': ['loadb', 'lb'],
     'sizes': ['sizes'],
-    'sizeA': ['sizeA'],
-    'sizeB': ['sizeB'],
+    'sizeA': ['sizea'],
+    'sizeB': ['sizeb'],
     'print': ['print', 'p'],
     'save': ['save', 's']
 }
@@ -249,3 +280,13 @@ while run:
 
         elif args[0] in commands['print']:
             print_results(comparisons)
+
+        elif args[0] in commands['save']:
+            file = "comparisons.txt"
+            wa = "a"
+            if len(args) > 1:
+                file = args[1]
+            if len(args) > 2:
+                if args[2] == "a" or args[2] == "w":
+                    wa = args[2]
+            save_results(comparisons, file, wa)
