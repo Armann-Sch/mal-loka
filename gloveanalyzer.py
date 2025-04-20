@@ -8,9 +8,6 @@ programname = "GloveAnalyzer"
 modelA = {}
 modelB = {}
 
-distsA = {}
-distsB = {}
-
 comparisons = {
         'word': '',
         'average diff' : 0,
@@ -43,7 +40,7 @@ def load_glove_model(File):
                 glove_model[word] = embedding
         
         print(f"{len(glove_model)} words loaded!")
-        return glove_model
+    return glove_model
 
 ###############################################################################
 # Accepts a model object, a distance dict and a word                          #
@@ -52,7 +49,6 @@ def load_glove_model(File):
 # euclidian distance from the original word.                                  #
 ###############################################################################
 def make_sorted(model, word):
-#    sort = {word: []}
     sort = []
     for k in model.keys():
         if k != word:
@@ -61,22 +57,6 @@ def make_sorted(model, word):
             sort.append((k, spatial.distance.euclidean(model[word], model[k])))
     sort = sorted(sort, key=lambda x: x[1])
     return sort
-
-# Takes a model, main word string and integer n
-# Returns the n closest words in terms of euclid
-# distance from the main word along with the distance
-def get_n_closest(model, main_word, n):
-    return make_sorted(model, main_word)
-
-# Takes a model, main word, float r as arguments
-# Returns all the words with a euclid distance
-# equal to or less than the provided range
-# along with the distances
-def get_within_range(model, main_word, r):
-    in_range = []
-    #search for words within range r
-
-    return in_range
 
 def print_results(cmp):
     cmp_s1 = f"Comparison for \"{cmp['word']}\"\n"
@@ -104,7 +84,6 @@ def print_results(cmp):
                 print(w)
         else:
             return
-
 
 def save_results(ow):
     return None
@@ -162,8 +141,6 @@ def compare_word_n(word, n):
     compare['average diff'] = avr
     
     return compare
-
-#def compare_word_range(word, r, wr)
 
 def prepare_models(A, B):
     global modelA
