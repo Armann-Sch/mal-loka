@@ -8,6 +8,7 @@ programname = "GloveAnalyzer"
 modelA = {}
 modelB = {}
 
+## Structure for holding information on comparisons between vectors
 comparisons = {
         'word': '',
         'average diff' : 0,
@@ -16,15 +17,15 @@ comparisons = {
         'both': []
     }
 
-# Accepts a filename as an argument and reads the file contents
-# Glove vectors are assumed to have a dimension of 300
+#################################################################################
+# # Accepts a filename as an argument and reads the file contents               #
+# Glove vectors are assumed to have a dimension of 300                          #
+#################################################################################
 def load_glove_model(File):
     glove_model = {}
-
     with open(File, 'r') as f:
         for line in f:
             split_line = line.split()
-            
             # Some tokens came out as two words sepearated by a space so
             # the systems checks to ensure it does not try to convert a
             # string to a float
@@ -35,7 +36,7 @@ def load_glove_model(File):
             else:
                 word = split_line[0]
                 embedding = np.array(split_line[1:], dtype=np.float64)
-            
+            # Filter out email addresses
             if '@' not in word and '.com' not in word and '.org' not in word and '.net' not in word:
                 glove_model[word] = embedding
         
@@ -54,10 +55,20 @@ def make_sorted(model, word):
         if k != word:
             if len(model[k]) == 302:
                 print(k)
+            # Append a touple containing a word and its euclidian distance from the main word
             sort.append((k, spatial.distance.euclidean(model[word], model[k])))
+    # Sort by distance
     sort = sorted(sort, key=lambda x: x[1])
     return sort
 
+#################################################################################
+# Accepts a comparison structure                                                #
+# Constructs a series of strings and prints it. The user is then prompted to    #
+# input a command, they can see all the words only found in A or B, the words   #
+# found in both and the difference in their distances, i to print the basic     #
+# information again, s to save the result, or blank to exit print mode and      #
+# return to the main mode.                                                      #
+#################################################################################
 def print_results(cmp):
     cmp_s1 = f"Comparison for \"{cmp['word']}\"\n"
     cmp_s2 = f"Nearby vectors only in A: {len(cmp['just A'])}\n"
@@ -66,6 +77,7 @@ def print_results(cmp):
     cmp_s5 = f"Average difference in vector distance: {cmp['average diff']}"
     cmp_string = cmp_s1+cmp_s2+cmp_s3+cmp_s4+cmp_s5
     print(cmp_string)
+    # Small menu for deciding what to do with the results
     while True:
         choice = input(f"To see the words in A , B or both, enter a, b or c. i for general info, s to save to file. To return to main menu enter blank. ").lower()
         c = ""
@@ -82,7 +94,9 @@ def print_results(cmp):
             f = input("Save to what file? (defaults to comparisons.txt) ")
             if f == "":
                 f = "comparisons.txt"
-            wa = input("over(w)rite or (a)ppend? ")
+            wa = input("over(w)rite or (a)ppend? (defaults to append)")
+            if wa != "w" and wa != "a":
+                wa = "a"
             save_results(comparisons, f, wa)
         else:
             c = ''
@@ -91,8 +105,15 @@ def print_results(cmp):
                 print(w)
         else:
             return
-
+        
+#################################################################################
+# Takes a comparison object, a filename string and a wa string                  #
+# Converts the information in the comparison objects into strings, opens a file #
+# with the given filename and appends it to the file if wa = a, or overwrites it#
+# if was is w.                                                                  #
+#################################################################################
 def save_results(cmp, filename, wa):
+    # Convert lists of tuples into lists of strings
     justA = []
     for a in cmp['just A']:
         justA.append(f"[{a[0]}, {a[1]}]")
@@ -102,6 +123,7 @@ def save_results(cmp, filename, wa):
     both = []
     for bo in cmp['both']:
         both.append(f"[{bo[0]}, {bo[1]}]")
+    
     with open(filename, wa) as f:
         f.write(f"Word: {cmp['word']}\n")
         f.write(f"Average difference: {cmp['average diff']}\n")
@@ -109,6 +131,11 @@ def save_results(cmp, filename, wa):
         f.write("JustB: " + ", ".join(justB)+"\n")
         f.write("Both: " + ", ".join(both)+"\n")
 
+#################################################################################
+# Takes in string object word, and integer n                                    #
+# Gets the n closest vectors in each model, then compares the lists if possible.#
+# Returns a comparison object.                                                  #
+#################################################################################
 def compare_word_n(word, n):
     compare = {
         'word': word,
@@ -117,8 +144,11 @@ def compare_word_n(word, n):
         'just B': [],
         'both': []
     }
+
+    # Make sure n is a positive value because negative numbers are not valid inputs
     n = abs(n)
 
+    # Check that the given word exists in either model
     A = True
     B = True
     if word not in modelA:
@@ -136,12 +166,14 @@ def compare_word_n(word, n):
     if B:
         irB = sorted(make_sorted(modelB, word)[:n])
 
-    avr = 0
+    # Indices i and j for irA and irB respectively
     i = 0
     j = 0
+    avr = 0
     total = 0
     count = 0
 
+    # If the word is found in both models, start comparing
     if A and B:
         while i < len(irA) and j < len(irB):
             # If the two words being compared are the same, add the word to the comparisons list both
@@ -167,10 +199,13 @@ def compare_word_n(word, n):
         if count != 0:
             avr = total/count
         compare['average diff'] = avr
+    
+    # Any remaining words are appended to the appropriate list
     if i < len(irA):
         compare['just A'].append(irA[i:])
     if j < len(irB):
         compare['just B'].append(irB[j:])
+        
     return compare
 
 def prepare_models(A, B):
@@ -213,7 +248,7 @@ commands_desc = {
     'save': 'save, s <filename> <w|a>: Save the last comparison to a file, an optional parameter w or a to instruct it to overwrite or append to the file. It will append by default.'    
 }
 
-
+# Welcoming message
 print(f"Welcome to {programname}!\nInsert h for a list of commands")
 
 # Loop that keeps the program running until the user tells it to quit
