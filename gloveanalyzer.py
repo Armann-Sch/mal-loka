@@ -201,10 +201,12 @@ def compare_word_n(word, n):
         compare['average diff'] = avr
     
     # Any remaining words are appended to the appropriate list
-    if i < len(irA):
-        compare['just A'].append(irA[i:])
-    if j < len(irB):
-        compare['just B'].append(irB[j:])
+    if A and i < len(irA):
+        for a in irA[i:]:
+            compare['just A'].append(a)
+    if B and j < len(irB):
+        for b in irB[j:]:
+            compare['just B'].append(b)
         
     return compare
 
