@@ -8,7 +8,9 @@ programname = "GloveAnalyzer"
 modelA = {}
 modelB = {}
 
-## Structure for holding information on comparisons between vectors
+n = 300
+
+## Structure for holding information on comparisons between vectors, holds the last comparison made
 comparisons = {
         'word': '',
         'average diff' : 0,
@@ -29,8 +31,8 @@ def load_glove_model(File):
             # Some tokens came out as two words sepearated by a space so
             # the systems checks to ensure it does not try to convert a
             # string to a float
-            if (len(split_line) > 301):
-                offset = len(split_line)-300
+            if (len(split_line) > n + 1):
+                offset = len(split_line)-n
                 word = " ".join(split_line[:offset])
                 embedding = np.array(split_line[offset:], dtype=np.float64)            
             else:
@@ -40,7 +42,7 @@ def load_glove_model(File):
             if '@' not in word and '.com' not in word and '.org' not in word and '.net' not in word:
                 glove_model[word] = embedding
         
-        print(f"{len(glove_model)} words loaded!")
+        print(f"Model containing {len(glove_model)} words loaded!")
     return glove_model
 
 ###############################################################################
@@ -94,7 +96,7 @@ def print_results(cmp):
             f = input("Save to what file? (defaults to comparisons.txt) ")
             if f == "":
                 f = "comparisons.txt"
-            wa = input("over(w)rite or (a)ppend? (defaults to append)")
+            wa = input("over(w)rite or (a)ppend? (defaults to append) ")
             if wa != "w" and wa != "a":
                 wa = "a"
             save_results(comparisons, f, wa)
@@ -127,8 +129,8 @@ def save_results(cmp, filename, wa):
     with open(filename, wa) as f:
         f.write(f"Word: {cmp['word']}\n")
         f.write(f"Average difference: {cmp['average diff']}\n")
-        f.write("JustA: " + ", ".join(justA)+"\n")
-        f.write("JustB: " + ", ".join(justB)+"\n")
+        f.write("Just A: " + ", ".join(justA)+"\n")
+        f.write("Just B: " + ", ".join(justB)+"\n")
         f.write("Both: " + ", ".join(both)+"\n")
 
 #################################################################################
@@ -153,7 +155,7 @@ def compare_word_n(word, n):
     B = True
     if word not in modelA:
         A = False
-        print(f"{word} was not found in modelA.")
+        print(f"{word} was not found in model A.")
     if word not in modelB:
         B = False
         print(f"{word} was not found in model B.")
@@ -233,21 +235,25 @@ commands = {
     'sizeA': ['sizea'],
     'sizeB': ['sizeb'],
     'print': ['print', 'p'],
-    'save': ['save', 's']
+    'save': ['save', 's'],
+    'vector size': ['vector', 'vectorsize', 'v'],
+    'set vector': ['setvector', 'setvectorsize', 'sv']
 }
 
 # Dictionary for holding descriptions for commands
 commands_desc = {
     'help': 'h, help <command>: List all commands and their descriptions\nh <cmd>, help <cmd>: Give the description of a specified command.',
     'quit': 'q, quit, exit: Exit the program.',
-    'load': 'load, l <modelname1> <modelname2>: Load two models',
-    'loada': 'loada, la <filename>: Load a model into the modelA object.',
-    'loadb': 'loadb, lb <filename>: Load a model into the modelB object.',
+    'load': 'load, l <modelname1> <modelname2>: Load two models (Note that it may take the program some time to load a model depending on its size).',
+    'loada': 'loada, la <filename>: Load a model into the modelA object (Note that it may take the program some time to load a model depending on its size).',
+    'loadb': 'loadb, lb <filename>: Load a model into the modelB object (Note that it may take the program some time to load a model depending on its size).',
     'sizes': 'sizes: Displays the number of entries in both models',
     'sizea': 'sizeA: Displays the number of entries in modelA.',
     'sizeb': 'sizeB: Displays the number of entries in modelB.',
     'print': 'print, p: Prints information about the last comparison in the terminal, enters a menu letting you see particular subsets of words using different commands.',
-    'save': 'save, s <filename> <w|a>: Save the last comparison to a file, an optional parameter w or a to instruct it to overwrite or append to the file. It will append by default.'    
+    'save': 'save, s <filename> <w|a>: Save the last comparison to a file, an optional parameter w or a to instruct it to overwrite or append to the file. It will append by default.',
+    'vectorsize': 'vector, vectorsize, v: Print the current vector size assumed by the program.',
+    'setvector': 'setvector, setvectorsize, sv: Set the vector size of models the prorgam assumes when loading models.'
 }
 
 # Welcoming message
@@ -307,13 +313,22 @@ while run:
                 print("You must enter file name.")
         
         elif args[0] in commands['sizes']:
-            print(f"ModelA: {len(modelA)} entries.\nModelB: {len(modelB)} entries.")
+            print(f"Model A: {len(modelA)} entries.\nModel B: {len(modelB)} entries.")
 
         elif args[0] in commands['sizeA']:
-            print(f"ModelA: {len(modelA)} entries.")
+            print(f"Model A: {len(modelA)} entries.")
 
         elif args[0] in commands['sizeB']:
-            print(f"ModelB: {len(modelB)} entries.")
+            print(f"Model B: {len(modelB)} entries.")
+
+        elif args[0] in commands['vector size']:
+            print(f"Current vector size: {n}")
+
+        elif args[0] in commands['set vector']:
+            if len(args) > 1:
+                if args[1].isdigit():
+                    n = abs(int(args[1]))
+                    print(f"Vector set to {n}")
 
         elif args[0] in commands['print']:
             print_results(comparisons)
