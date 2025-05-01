@@ -5,9 +5,11 @@ from scipy import spatial
 programname = "GloveAnalyzer"
 
 # Global variables declared
+## Containers for the GloVe models
 modelA = {}
 modelB = {}
 
+## Vector size variable
 n = 300
 
 ## Structure for holding information on comparisons between vectors, holds the last comparison made
@@ -20,11 +22,14 @@ comparisons = {
     }
 
 #################################################################################
-# # Accepts a filename as an argument and reads the file contents               #
-# Glove vectors are assumed to have a dimension of 300                          #
+# Accepts a filename as an argument and reads the file contents then returns it #
+# as a dictionary                                                               #
+# Function uses the n variable for deciding how many values are in the vectors, #
+# it is set to 300 by default                                                   #
 #################################################################################
 def load_glove_model(File):
     glove_model = {}
+    
     with open(File, 'r') as f:
         for line in f:
             split_line = line.split()
@@ -53,12 +58,14 @@ def load_glove_model(File):
 ###############################################################################
 def make_sorted(model, word):
     sort = []
+    
     for k in model.keys():
         if k != word:
             if len(model[k]) == 302:
                 print(k)
             # Append a touple containing a word and its euclidian distance from the main word
             sort.append((k, spatial.distance.euclidean(model[word], model[k])))
+    
     # Sort by distance
     sort = sorted(sort, key=lambda x: x[1])
     return sort
@@ -78,6 +85,7 @@ def print_results(cmp):
     cmp_s4 = f"Nearby vectors in both: {len(cmp['both'])}\n"
     cmp_s5 = f"Average difference in vector distance: {cmp['average diff']}"
     cmp_string = cmp_s1+cmp_s2+cmp_s3+cmp_s4+cmp_s5
+    
     print(cmp_string)
     # Small menu for deciding what to do with the results
     while True:
@@ -111,8 +119,8 @@ def print_results(cmp):
 #################################################################################
 # Takes a comparison object, a filename string and a wa string                  #
 # Converts the information in the comparison objects into strings, opens a file #
-# with the given filename and appends it to the file if wa = a, or overwrites it#
-# if was is w.                                                                  #
+# with the given filename and appends it to the file if wa = a, or overwrites   #
+# it if was is w.                                                               #
 #################################################################################
 def save_results(cmp, filename, wa):
     # Convert lists of tuples into lists of strings
@@ -153,6 +161,7 @@ def compare_word_n(word, n):
     # Check that the given word exists in either model
     A = True
     B = True
+
     if word not in modelA:
         A = False
         print(f"{word} was not found in model A.")
@@ -211,17 +220,6 @@ def compare_word_n(word, n):
             compare['just B'].append(b)
         
     return compare
-
-def prepare_models(A, B):
-    global modelA
-    global modelB
-    global comparisons
-    modelA = load_glove_model(A)
-    modelB = load_glove_model(B)
-    
-    comparisons = compare_word_n('Sherlock', 30)
-
-prepare_models("gloves/sherlock/vectors.txt", "gloves/14/model.txt")
 
 # Dictionary for parsing commands
 commands = {
