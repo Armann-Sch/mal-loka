@@ -10,4 +10,4 @@ The GloVe Analyzer is a simple terminal program that reads in two GloVe models f
 
 To use it you will need two GloVe model txt files, you can load them by entering `load <modela> <modelb>` or if you wish to load them separately, `loada <modela>`, `loadb <modelb>`.
 
-For a list of commands enter 'help', for elaboration on any given commands enter `help <command>`
+For a list of commands enter `help`, for elaboration on any given commands enter `help <command>`
